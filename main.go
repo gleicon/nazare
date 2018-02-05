@@ -14,7 +14,8 @@ func help() {
 
 func main() {
 
-	counters, _ := NewHLLCounters("hllcounters.db")
+	memds, _ := NewHLLDatastorage()
+	counters, _ := NewHLLCounters(memds)
 	counterName := flag.String("n", "", "HLL counter name")
 	incrementBy := flag.String("i", "", "Increment counter by string")
 	flag.Usage = help
