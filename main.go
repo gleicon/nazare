@@ -4,6 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
+
+	"github.com/gleicon/renand/counters"
+	"github.com/gleicon/renand/db"
 )
 
 func help() {
@@ -21,14 +24,14 @@ func main() {
 	flag.Usage = help
 	flag.Parse()
 
-	var counters *HLLCounters
+	var counters *counters.HLLCounters
 
 	if *badger == true {
-		badgerds, _ := NewBadgerDatastorage("testcounters")
-		counters, _ = NewHLLCounters(badgerds)
+		badgerds, _ := db.NewBadgerDatastorage("testcounters")
+		counters, _ = counters.NewHLLCounters(badgerds)
 	} else {
-		memds, _ := NewHLLDatastorage()
-		counters, _ = NewHLLCounters(memds)
+		memds, _ := db.NewHLLDatastorage()
+		counters, _ = counters.NewHLLCounters(memds)
 
 	}
 

@@ -1,10 +1,11 @@
-package main
+package counters
 
 import (
 	"errors"
 	"sync"
 
 	"github.com/axiomhq/hyperloglog"
+	"github.com/gleicon/renand/db"
 )
 
 /*
@@ -19,7 +20,7 @@ HLLCounters Wraps hyperloglog implementation and keep an active counter register
 */
 type HLLCounters struct {
 	hllrwlocks  map[string]*sync.RWMutex
-	datastorage Datastorage
+	datastorage db.Datastorage
 	stats       HLLCounterStats
 }
 
@@ -27,7 +28,7 @@ type HLLCounters struct {
 NewHLLCounters is a high level HLL counter abstraction.
 Wraps the hll implementation, keeps an active counter register, knows how to save it to disk.
 */
-func NewHLLCounters(ds Datastorage) (*HLLCounters, error) {
+func NewHLLCounters(ds db.Datastorage) (*HLLCounters, error) {
 
 	hll := HLLCounters{}
 	hll.datastorage = ds

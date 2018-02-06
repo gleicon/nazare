@@ -1,4 +1,4 @@
-package main
+package db
 
 /*
 Datastorage describes the generic interface to store counters.
