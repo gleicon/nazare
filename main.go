@@ -25,10 +25,10 @@ func main() {
 		fmt.Println("No counter")
 		os.Exit(-1)
 	}
+	var cc uint64
+	var err error
 
 	if *incrementBy == "" {
-		var cc uint64
-		var err error
 		if cc, err = counters.RetrieveCounterEstimate(*counterName); err != nil {
 			fmt.Println("Error:", err)
 			os.Exit(-1)
@@ -40,8 +40,6 @@ func main() {
 			fmt.Println("Error:", err)
 			os.Exit(-1)
 		}
-		var cc uint64
-		var err error
 		if cc, err = counters.RetrieveCounterEstimate(*counterName); err != nil {
 			fmt.Println("Error:", err)
 			os.Exit(-1)

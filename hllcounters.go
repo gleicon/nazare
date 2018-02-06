@@ -56,7 +56,11 @@ func (hc *HLLCounters) Stats() HLLCounterStats {
 RetrieveCounterEstimate retrieves the estimate for <<name>> counter
 */
 func (hc *HLLCounters) RetrieveCounterEstimate(name string) (uint64, error) {
-	cc, _ := hc.datastorage.Get(name)
+	var err error
+	var cc []byte
+	if cc, err = hc.datastorage.Get(name); err != nil {
+		return 0, err
+	}
 	if cc == nil {
 		return 0, errors.New("Counter does not exist:" + name)
 	}

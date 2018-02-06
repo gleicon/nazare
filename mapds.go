@@ -18,10 +18,7 @@ func NewHLLDatastorage() (*HLLDatastorage, error) {
 }
 
 func (hds *HLLDatastorage) Add(name string, payload []byte) error {
-	if hds.bytemap[name] == nil {
-		hds.bytemap[name] = make([]byte, 1)
-	}
-	copy(hds.bytemap[name], payload)
+	hds.bytemap[name] = payload
 	return nil
 }
 
