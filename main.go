@@ -24,14 +24,14 @@ func main() {
 	flag.Usage = help
 	flag.Parse()
 
-	var counters *counters.HLLCounters
+	var localCounters *counters.HLLCounters
 
 	if *badger == true {
 		badgerds, _ := db.NewBadgerDatastorage("testcounters")
-		counters, _ = counters.NewHLLCounters(badgerds)
+		localCounters, _ = counters.NewHLLCounters(badgerds)
 	} else {
 		memds, _ := db.NewHLLDatastorage()
-		counters, _ = counters.NewHLLCounters(memds)
+		localCounters, _ = counters.NewHLLCounters(memds)
 
 	}
 
@@ -43,24 +43,24 @@ func main() {
 	var err error
 
 	if *incrementBy == "" {
-		if cc, err = counters.RetrieveCounterEstimate(*counterName); err != nil {
+		if cc, err = localCounters.RetrieveCounterEstimate(*counterName); err != nil {
 			fmt.Println("Error:", err)
 			os.Exit(-1)
 
 		}
 		fmt.Printf("counter: %s - est. size: %d\n", *counterName, cc)
 	} else {
-		if err := counters.IncrementCounter(*counterName, []byte(*incrementBy)); err != nil {
+		if err := localCounters.IncrementCounter(*counterName, []byte(*incrementBy)); err != nil {
 			fmt.Println("Error:", err)
 			os.Exit(-1)
 		}
-		if cc, err = counters.RetrieveCounterEstimate(*counterName); err != nil {
+		if cc, err = localCounters.RetrieveCounterEstimate(*counterName); err != nil {
 			fmt.Println("Error:", err)
 			os.Exit(-1)
 
 		}
 		fmt.Printf("counter: %s - est. size: %d\n", *counterName, cc)
-		xx, _ := counters.ExportCounter(*counterName)
+		xx, _ := localCounters.ExportCounter(*counterName)
 		fmt.Printf("%x\n", xx)
 
 	}
