@@ -14,12 +14,23 @@ func help() {
 
 func main() {
 
-	memds, _ := NewHLLDatastorage()
-	counters, _ := NewHLLCounters(memds)
 	counterName := flag.String("n", "", "HLL counter name")
 	incrementBy := flag.String("i", "", "Increment counter by string")
+	badger := flag.Bool("b", false, "Enable badger datastorage")
+
 	flag.Usage = help
 	flag.Parse()
+
+	var counters *HLLCounters
+
+	if *badger == true {
+		badgerds, _ := NewBadgerDatastorage("testcounters")
+		counters, _ = NewHLLCounters(badgerds)
+	} else {
+		memds, _ := NewHLLDatastorage()
+		counters, _ = NewHLLCounters(memds)
+
+	}
 
 	if *counterName == "" {
 		fmt.Println("No counter")
