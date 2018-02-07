@@ -1,2 +1,4 @@
 renand
 testcounters
+cli/cli
+hllcounters.db
