@@ -73,6 +73,32 @@ func (hc *HLLCounters) RetrieveCounterEstimate(name string) (uint64, error) {
 }
 
 /*
+RetrieveAndMergeCounterEstimates retrieves the estimate for <<name>> counter
+*/
+func (hc *HLLCounters) RetrieveAndMergeCounterEstimates(counterNames ...string) (uint64, error) {
+	var err error
+	var cc []byte
+	pivotHLL := hyperloglog.New16()
+	for _, counter := range counterNames {
+		if cc, err = hc.datastorage.Get(counter); err != nil {
+			return 0, err
+		}
+		if cc == nil {
+			continue // just skip or
+			// return 0, errors.New("Counter does not exist:" + name)
+		}
+		tempHLL := hyperloglog.New16()
+		if err := tempHLL.UnmarshalBinary(cc); err != nil {
+			return 0, err
+		}
+		if err := pivotHLL.Merge(tempHLL); err != nil {
+			return 0, nil
+		}
+	}
+	return pivotHLL.Estimate(), nil
+}
+
+/*
 IncrementCounter increments <<name>> counter by adding <<item>> to it.
 The counter and its lock is automatically created if it is empty.
 */
