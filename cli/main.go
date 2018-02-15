@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gleicon/renand/counters"
-	"github.com/gleicon/renand/db"
+	"github.com/gleicon/nazare/counters"
+	"github.com/gleicon/nazare/db"
 )
 
 func help() {
 	fmt.Println("increment hll counters: counters -n <countername> -i foobar")
 	fmt.Println("estimate counter size: counters -n <countername>")
+	fmt.Println("used -b to persist the counter on badge db (testcounters.db in the current dir)") 
 	os.Exit(-1)
 }
 
@@ -27,7 +28,7 @@ func main() {
 	var localCounters *counters.HLLCounters
 
 	if *badger == true {
-		badgerds, _ := db.NewBadgerDatastorage("testcounters")
+		badgerds, _ := db.NewBadgerDatastorage("testcounters.db")
 		localCounters, _ = counters.NewHLLCounters(badgerds)
 	} else {
 		memds, _ := db.NewHLLDatastorage()

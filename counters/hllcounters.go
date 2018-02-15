@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/axiomhq/hyperloglog"
-	"github.com/gleicon/renand/db"
+	"github.com/gleicon/nazare/db"
 )
 
 /*

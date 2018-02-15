@@ -7,6 +7,7 @@ Drop in replacement for Redis specifically on counters to achieve better perform
 ### Build and run
 
 $ make
+
 $ ./nazare
 
 ### Options
@@ -28,5 +29,8 @@ $ ./nazare
 
 	metrics and stats
 
+### Nazaré
+
+![nazarect](nazare.jpg)
 
 gleicon

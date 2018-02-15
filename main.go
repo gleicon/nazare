@@ -6,8 +6,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/gleicon/renand/counters"
-	"github.com/gleicon/renand/db"
+	"github.com/gleicon/nazare/counters"
+	"github.com/gleicon/nazare/db"
 	"github.com/tidwall/redcon"
 )
 

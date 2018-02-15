@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gleicon/renand/db"
+	"github.com/gleicon/nazare/db"
 )
 
 var counters *HLLCounters
