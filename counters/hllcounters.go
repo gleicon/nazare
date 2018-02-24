@@ -65,6 +65,7 @@ func (hc *HLLCounters) RetrieveCounterEstimate(name string) (uint64, error) {
 	if cc == nil {
 		return 0, errors.New("Counter does not exist:" + name)
 	}
+
 	hll := hyperloglog.New16()
 	if err := hll.UnmarshalBinary(cc); err != nil {
 		return 0, err
@@ -83,6 +84,7 @@ func (hc *HLLCounters) RetrieveAndMergeCounterEstimates(counterNames ...string) 
 		if cc, err = hc.datastorage.Get(counter); err != nil {
 			return 0, err
 		}
+
 		if cc == nil {
 			continue // just skip or
 			// return 0, errors.New("Counter does not exist:" + name)
@@ -112,6 +114,7 @@ func (hc *HLLCounters) IncrementCounter(name string, item []byte) error {
 	defer localMutex.Unlock()
 
 	cc, _ := hc.datastorage.Get(name)
+
 	hll := hyperloglog.New16()
 	if cc != nil {
 		if err := hll.UnmarshalBinary(cc); err != nil {
