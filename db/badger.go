@@ -1,11 +1,13 @@
 package db
 
 import (
+	"errors"
 	"log"
 	"sync"
 	"time"
 
 	"github.com/dgraph-io/badger"
+	"github.com/golang/snappy"
 )
 
 /*
@@ -57,8 +59,14 @@ func (bds *BadgerDatastorage) cleanup() {
 }
 
 func (bds *BadgerDatastorage) Add(key string, value []byte) error {
+	compressedValue := snappy.Encode(nil, value)
+
+	if compressedValue == nil {
+		return errors.New("Error compressing payload")
+	}
+
 	err := bds.db.Update(func(txn *badger.Txn) error {
-		err := txn.Set([]byte(key), value)
+		err := txn.Set([]byte(key), compressedValue)
 		if err != nil {
 			return err
 		}
@@ -79,7 +87,14 @@ func (bds *BadgerDatastorage) Get(key string) ([]byte, error) {
 		if err != nil && err != badger.ErrKeyNotFound {
 			return err
 		}
-		payload, _ = item.Value()
+		compressedValue, _ := item.Value()
+		payload, err = snappy.Decode(nil, compressedValue)
+		if err != nil {
+			return err
+		}
+		if payload == nil {
+			return errors.New("Error uncompressing payload")
+		}
 		return nil
 	})
 
