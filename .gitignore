@@ -6,3 +6,4 @@ hllcounters.db
 *.trace
 .DS_Store
 db/test_badger.db/
+nazare

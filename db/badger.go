@@ -27,10 +27,9 @@ NewBadgerDatastorage spin up a new badge based datastorage
 func NewBadgerDatastorage(dbpath string) (*BadgerDatastorage, error) {
 	var err error
 	bds := BadgerDatastorage{filepath: dbpath, datapath: dbpath}
-	opts := badger.DefaultOptions
+	opts := badger.DefaultOptions(dbpath)
 	opts.SyncWrites = true
 	opts.Dir = dbpath
-	opts.ValueDir = dbpath
 	bds.db, err = badger.Open(opts)
 	if err != nil {
 		return nil, err
@@ -51,7 +50,6 @@ func (bds *BadgerDatastorage) cleanup() {
 	ll.Lock()
 	defer ll.Unlock()
 	// TODO: these cleanup methods should be in a goroutine
-	bds.db.PurgeOlderVersions()
 	bds.db.RunValueLogGC(1.0)
 }
 
@@ -119,20 +117,23 @@ func (bds *BadgerDatastorage) Get(key []byte) ([]byte, error) {
 		if err != nil && err != badger.ErrKeyNotFound {
 			return err
 		}
-		retValue, _ := item.Value()
-		if bds.compression {
-			payload, err = snappy.Decode(nil, retValue)
-			if err != nil {
-				return err
+		err = item.Value(func(val []byte) error {
+			if !bds.compression {
+				payload = val
+			} else {
+				retVal, err := snappy.Decode(nil, val)
+				if err != nil {
+					return err
+				}
+				if payload == nil {
+					return errors.New("Error uncompressing payload")
+				}
+				payload = retVal
 			}
-			if payload == nil {
-				return errors.New("Error uncompressing payload")
-			}
-		} else {
-			payload = retValue
-		}
+			return nil
 
-		return nil
+		})
+		return err
 	})
 
 	return payload, err
