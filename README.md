@@ -26,7 +26,7 @@ $ ./nazare
 ### TODO
 
 	implement PFMERGE
-
+	implement GET/SET w/ cuckoo filter
 	metrics and stats
 
 ### Nazaré
