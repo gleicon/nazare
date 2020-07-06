@@ -4,9 +4,9 @@ package db
 Datastorage describes the generic interface to store counters.
 */
 type Datastorage interface {
-	Add(string, []byte) error
-	Get(string) ([]byte, error)
-	Delete(string)
+	Add([]byte, []byte) error
+	Get([]byte) ([]byte, error)
+	Delete([]byte) error
 	Close()
 	Flush()
 }
