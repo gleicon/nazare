@@ -49,21 +49,20 @@ func (hc *HLLCounters) Close() {
 Stats for all counters
 */
 func (hc *HLLCounters) Stats() HLLCounterStats {
-	// TODO: this is the place to flush what we have for the db.
 	return hc.stats
 }
 
 /*
 RetrieveCounterEstimate retrieves the estimate for <<name>> counter
 */
-func (hc *HLLCounters) RetrieveCounterEstimate(name string) (uint64, error) {
+func (hc *HLLCounters) RetrieveCounterEstimate(key string) (uint64, error) {
 	var err error
 	var cc []byte
-	if cc, err = hc.datastorage.Get(name); err != nil {
+	if cc, err = hc.datastorage.Get([]byte(key)); err != nil {
 		return 0, err
 	}
 	if cc == nil {
-		return 0, errors.New("Counter does not exist:" + name)
+		return 0, errors.New("Counter does not exist:" + key)
 	}
 
 	hll := hyperloglog.New16()
@@ -74,6 +73,20 @@ func (hc *HLLCounters) RetrieveCounterEstimate(name string) (uint64, error) {
 }
 
 /*
+hll aware merge function. problem, it ties the db impl w/ the hll impl
+*/
+func (hc *HLLCounters) mergeMarshaledCounter(dest []byte, increment []byte) ([]byte, error) {
+	hll := hyperloglog.New16()
+	if hll != nil {
+		if err := hll.UnmarshalBinary(dest); err != nil {
+			return nil, err
+		}
+	}
+	hll.Insert(increment)
+	return hll.MarshalBinary()
+}
+
+/*
 RetrieveAndMergeCounterEstimates retrieves the estimate for <<name>> counter
 */
 func (hc *HLLCounters) RetrieveAndMergeCounterEstimates(counterNames ...string) (uint64, error) {
@@ -81,7 +94,7 @@ func (hc *HLLCounters) RetrieveAndMergeCounterEstimates(counterNames ...string) 
 	var cc []byte
 	pivotHLL := hyperloglog.New16()
 	for _, counter := range counterNames {
-		if cc, err = hc.datastorage.Get(counter); err != nil {
+		if cc, err = hc.datastorage.Get([]byte(counter)); err != nil {
 			return 0, err
 		}
 
@@ -102,18 +115,19 @@ func (hc *HLLCounters) RetrieveAndMergeCounterEstimates(counterNames ...string) 
 
 /*
 IncrementCounter increments <<name>> counter by adding <<item>> to it.
-The counter and its lock is automatically created if it is empty.
+The naive implementation locks(), get, increment and set
+The counter and its lock are automatically created if it is empty.
 */
-func (hc *HLLCounters) IncrementCounter(name string, item []byte) error {
-	if hc.hllrwlocks[name] == nil {
-		hc.hllrwlocks[name] = new(sync.RWMutex)
+func (hc *HLLCounters) IncrementCounter(key string, item []byte) error {
+	if hc.hllrwlocks[key] == nil {
+		hc.hllrwlocks[key] = new(sync.RWMutex)
 	}
 
-	localMutex := hc.hllrwlocks[name]
+	localMutex := hc.hllrwlocks[key]
 	localMutex.Lock()
 	defer localMutex.Unlock()
 
-	cc, _ := hc.datastorage.Get(name)
+	cc, _ := hc.datastorage.Get([]byte(key))
 
 	hll := hyperloglog.New16()
 	if cc != nil {
@@ -132,7 +146,7 @@ func (hc *HLLCounters) IncrementCounter(name string, item []byte) error {
 		return err
 	}
 
-	if err = hc.datastorage.Add(name, bd); err != nil {
+	if err = hc.datastorage.Add([]byte(key), bd); err != nil {
 		return err
 	}
 	return nil
@@ -141,10 +155,10 @@ func (hc *HLLCounters) IncrementCounter(name string, item []byte) error {
 /*
 ExportCounter returns the counter binary form
 */
-func (hc *HLLCounters) ExportCounter(name string) ([]byte, error) {
-	cc, _ := hc.datastorage.Get(name)
+func (hc *HLLCounters) ExportCounter(key string) ([]byte, error) {
+	cc, _ := hc.datastorage.Get([]byte(key))
 	if cc == nil {
-		return nil, errors.New("Counter does not exist:" + name)
+		return nil, errors.New("Counter does not exist:" + key)
 	}
 	hll := hyperloglog.New16()
 	if err := hll.UnmarshalBinary(cc); err != nil {

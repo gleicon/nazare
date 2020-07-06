@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 
 	"github.com/gleicon/nazare/counters"
@@ -41,5 +43,6 @@ func main() {
 		err := redcon.ListenAndServe(serverAddr, redisCommandParser, newConnection, closeConnection)
 		log.Fatal(err)
 	}()
+	http.ListenAndServe(httpAPIAddr, nil)
 	select {}
 }

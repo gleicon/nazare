@@ -1,12 +1,15 @@
 package db
 
+/*
+HLLDatastorage is a memory based data storage implementation
+*/
 type HLLDatastorage struct {
 	Datastorage
 	bytemap map[string][]byte
 }
 
 /*
-NewHLLCounters is a high level HLL counter abstraction.
+NewHLLDatastorage is a high level HLL counter abstraction.
 Wraps the hll implementation, keeps an active counter register, knows how to save it to disk.
 */
 func NewHLLDatastorage() (*HLLDatastorage, error) {
@@ -17,16 +20,36 @@ func NewHLLDatastorage() (*HLLDatastorage, error) {
 	return &hll, nil
 }
 
-func (hds *HLLDatastorage) Add(name string, payload []byte) error {
-	hds.bytemap[name] = payload
+/*
+Add a new key
+*/
+func (hds *HLLDatastorage) Add(key []byte, payload []byte) error {
+	hds.bytemap[string(key)] = payload
 	return nil
 }
 
-func (hds *HLLDatastorage) Get(name string) ([]byte, error) {
-	return hds.bytemap[name], nil
+/*
+Get data
+*/
+func (hds *HLLDatastorage) Get(key []byte) ([]byte, error) {
+	return hds.bytemap[string(key)], nil
 
 }
 
-func (hds *HLLDatastorage) Delete(string) {} // NOOP
-func (hds *HLLDatastorage) Close()        {} // NOOP
-func (hds *HLLDatastorage) Flush()        {} // NOOP
+/*
+Delete a key
+*/
+func (hds *HLLDatastorage) Delete(key []byte) error {
+	delete(hds.bytemap, string(key))
+	return nil
+}
+
+/*
+Close the db - NOOP
+*/
+func (hds *HLLDatastorage) Close() {} // NOOP
+
+/*
+Flush the db - NOOP
+*/
+func (hds *HLLDatastorage) Flush() {} // NOOP

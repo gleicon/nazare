@@ -15,9 +15,10 @@ BadgerDatastorage is an abstraction over badger db to store bytemaps of serialis
 */
 type BadgerDatastorage struct {
 	Datastorage
-	filepath string
-	datapath string
-	db       *badger.DB
+	filepath    string
+	datapath    string
+	db          *badger.DB
+	compression bool
 }
 
 /*
@@ -26,18 +27,13 @@ NewBadgerDatastorage spin up a new badge based datastorage
 func NewBadgerDatastorage(dbpath string) (*BadgerDatastorage, error) {
 	var err error
 	bds := BadgerDatastorage{filepath: dbpath, datapath: dbpath}
-	opts := badger.DefaultOptions
+	opts := badger.DefaultOptions(dbpath)
 	opts.SyncWrites = true
 	opts.Dir = dbpath
-	opts.ValueDir = dbpath
 	bds.db, err = badger.Open(opts)
 	if err != nil {
 		return nil, err
 	}
-	// read the counter database on load. That could (should ?) be moved
-	//if err = bds.loadCountersFromDatabase(); err != nil {
-	//	return nil, err
-	//}
 	go func() {
 		log.Println("Database housekeeping")
 		bds.cleanup()
@@ -54,88 +50,125 @@ func (bds *BadgerDatastorage) cleanup() {
 	ll.Lock()
 	defer ll.Unlock()
 	// TODO: these cleanup methods should be in a goroutine
-	bds.db.PurgeOlderVersions()
 	bds.db.RunValueLogGC(1.0)
 }
 
-func (bds *BadgerDatastorage) Add(key string, value []byte) error {
-	compressedValue := snappy.Encode(nil, value)
+/*
+Add data
+*/
+func (bds *BadgerDatastorage) Add(key, value []byte) error {
+	var vals []byte
+	if bds.compression {
+		vals := snappy.Encode(nil, value)
 
-	if compressedValue == nil {
-		return errors.New("Error compressing payload")
+		if vals == nil {
+			return errors.New("Error compressing payload")
+		}
+	} else {
+		vals = value
 	}
 
 	err := bds.db.Update(func(txn *badger.Txn) error {
-		err := txn.Set([]byte(key), compressedValue)
+		err := txn.Set([]byte(key), vals)
 		if err != nil {
 			return err
 		}
 		return nil
 	})
 	return err
-
 }
 
-func (bds *BadgerDatastorage) Get(key string) ([]byte, error) {
+/*
+Merge value into key, this require knowledge about the hll function and no compression
+*/
+func (bds *BadgerDatastorage) Merge(key, value []byte, mergeFunc badger.MergeFunc) error {
+	if bds.compression {
+		return errors.New("Merge requires non-compressed payload")
+	}
+
+	// This may be a thing to tune. compaction goroutine from badger is set to 200ms
+	dm := bds.db.GetMergeOperator(key, mergeFunc, 200*time.Millisecond)
+	defer dm.Stop()
+
+	dm.Add(value)
+
+	err := bds.db.Update(func(txn *badger.Txn) error {
+		lv, _ := dm.Get()
+		err := txn.Set([]byte(key), lv)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	return err
+}
+
+/*
+Get data from the db
+*/
+func (bds *BadgerDatastorage) Get(key []byte) ([]byte, error) {
 	var payload []byte
 	err := bds.db.View(func(txn *badger.Txn) error {
 
-		item, err := txn.Get([]byte(key))
+		item, err := txn.Get(key)
 		if err == badger.ErrKeyNotFound {
 			return nil
 		}
 		if err != nil && err != badger.ErrKeyNotFound {
 			return err
 		}
-		compressedValue, _ := item.Value()
-		payload, err = snappy.Decode(nil, compressedValue)
-		if err != nil {
-			return err
-		}
-		if payload == nil {
-			return errors.New("Error uncompressing payload")
-		}
-		return nil
+		err = item.Value(func(val []byte) error {
+			if !bds.compression {
+				payload = val
+			} else {
+				retVal, err := snappy.Decode(nil, val)
+				if err != nil {
+					return err
+				}
+				if payload == nil {
+					return errors.New("Error uncompressing payload")
+				}
+				payload = retVal
+			}
+			return nil
+
+		})
+		return err
 	})
 
 	return payload, err
 }
 
+/*
+Delete a given key
+*/
+func (bds *BadgerDatastorage) Delete(key []byte) error {
+	err := bds.db.View(func(txn *badger.Txn) error {
+
+		err := txn.Delete(key)
+		if err == badger.ErrKeyNotFound {
+			return nil
+		}
+		if err != nil && err != badger.ErrKeyNotFound {
+			return err
+		}
+
+		return nil
+	})
+	return err
+}
+
+/*
+Close the database safely, flushing it first
+*/
 func (bds *BadgerDatastorage) Close() {
 	bds.cleanup()
 	bds.db.Close()
 }
 
+/*
+Flush the database safely
+*/
 func (bds *BadgerDatastorage) Flush() {
 	bds.cleanup()
 }
-
-func Delete(string) {}
-
-/*
-Read all counters from the database, overwrites any current value from memory
-func (hc *HLLCounters) loadCountersFromDatabase() error {
-	log.Println("Loading counters from database")
-	hc.stats.ActiveCounters = 0
-	err := db.View(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.PrefetchValues = false
-		it := txn.NewIterator(opts)
-		for it.Rewind(); it.Valid(); it.Next() {
-			item := it.Item()
-			k := item.Key()
-			v, err := item.Value()
-			if err != nil {
-				return err
-			}
-			key := string(k)
-			hl := hyperloglog.New16()
-			hl.UnmarshalBinary(v)
-			hc.hllcounters[key] = &hl
-			hc.stats.ActiveCounters++
-		}
-		return nil
-	})
-	return err
-}
-*/

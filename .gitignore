@@ -2,3 +2,8 @@ renand
 testcounters
 cli/cli
 hllcounters.db
+*.prof
+*.trace
+.DS_Store
+db/test_badger.db/
+nazare
