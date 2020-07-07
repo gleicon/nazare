@@ -17,7 +17,7 @@ func TestMain(t *testing.T) {
 func TestRetrieveCounterEstimate(t *testing.T) {
 	var cc uint64
 	var err error
-	counterName := "testcounter"
+	counterName := []byte("testcounter")
 
 	if cc, err = counters.RetrieveCounterEstimate(counterName); err == nil {
 		t.Error(err)
