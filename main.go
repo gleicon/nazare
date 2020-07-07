@@ -8,6 +8,8 @@ import (
 	_ "net/http/pprof"
 	"os"
 
+	"github.com/gleicon/nazare/sets"
+
 	"github.com/gleicon/nazare/counters"
 	"github.com/gleicon/nazare/db"
 	"github.com/tidwall/redcon"
@@ -23,6 +25,7 @@ func help() {
 }
 
 var localCounters *counters.HLLCounters
+var localSets *sets.CkSet
 
 func main() {
 
@@ -35,8 +38,10 @@ func main() {
 	flag.Usage = help
 	flag.Parse()
 
-	badgerds, _ := db.NewBadgerDatastorage(dbPath)
-	localCounters, _ = counters.NewHLLCounters(badgerds)
+	localDatastorage, _ := db.NewBadgerDatastorage(dbPath)
+	localCounters, _ = counters.NewHLLCounters(localDatastorage)
+	localSets, _ = sets.NewCkSets(localDatastorage)
+
 	log.Println(httpAPIAddr)
 
 	go func() {

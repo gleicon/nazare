@@ -55,14 +55,14 @@ func (hc *HLLCounters) Stats() HLLCounterStats {
 /*
 RetrieveCounterEstimate retrieves the estimate for <<name>> counter
 */
-func (hc *HLLCounters) RetrieveCounterEstimate(key string) (uint64, error) {
+func (hc *HLLCounters) RetrieveCounterEstimate(key []byte) (uint64, error) {
 	var err error
 	var cc []byte
-	if cc, err = hc.datastorage.Get([]byte(key)); err != nil {
+	if cc, err = hc.datastorage.Get(key); err != nil {
 		return 0, err
 	}
 	if cc == nil {
-		return 0, errors.New("Counter does not exist:" + key)
+		return 0, errors.New("Counter does not exist:" + string(key))
 	}
 
 	hll := hyperloglog.New16()
@@ -89,12 +89,12 @@ func (hc *HLLCounters) mergeMarshaledCounter(dest []byte, increment []byte) ([]b
 /*
 RetrieveAndMergeCounterEstimates retrieves the estimate for <<name>> counter
 */
-func (hc *HLLCounters) RetrieveAndMergeCounterEstimates(counterNames ...string) (uint64, error) {
+func (hc *HLLCounters) RetrieveAndMergeCounterEstimates(counterNames ...[]byte) (uint64, error) {
 	var err error
 	var cc []byte
 	pivotHLL := hyperloglog.New16()
 	for _, counter := range counterNames {
-		if cc, err = hc.datastorage.Get([]byte(counter)); err != nil {
+		if cc, err = hc.datastorage.Get(counter); err != nil {
 			return 0, err
 		}
 
@@ -118,12 +118,12 @@ IncrementCounter increments <<name>> counter by adding <<item>> to it.
 The naive implementation locks(), get, increment and set
 The counter and its lock are automatically created if it is empty.
 */
-func (hc *HLLCounters) IncrementCounter(key string, item []byte) error {
-	if hc.hllrwlocks[key] == nil {
-		hc.hllrwlocks[key] = new(sync.RWMutex)
+func (hc *HLLCounters) IncrementCounter(key []byte, item []byte) error {
+	if hc.hllrwlocks[string(key)] == nil {
+		hc.hllrwlocks[string(key)] = new(sync.RWMutex)
 	}
 
-	localMutex := hc.hllrwlocks[key]
+	localMutex := hc.hllrwlocks[string(key)]
 	localMutex.Lock()
 	defer localMutex.Unlock()
 
