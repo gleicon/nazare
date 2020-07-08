@@ -3,7 +3,9 @@ Nazaré is a server for sketch counters and sets persisted on badger db with a r
 
 ### Why
 Many opensource services resort to sketch structures when the cardinality (size) of a counter reaches beyond a certain value. [Elasticsearch](https://www.elastic.co/blog/count-elasticsearch) uses hyperloglog for counters over 40k documents. Cassandra uses bloom filter to prevent disk hits as cache. Redis implements HyperLogLog too. 
+
 Sketch structures trade size or performance by accuracy. Different implementations are available that tune these parameters. 
+
 Nazare is a drop in replacement for Redis as it speaks the same protocol, enabling any application that implements a Redis Driver to use such counters and sets operations.
 The Underlying database is [BadgerDB](https://github.com/dgraph-io/badger), which implements a series of improvements over non Golang local kv values, including concurrent ACID transactions.
 
