@@ -23,18 +23,64 @@ func redisCommandParser(conn redcon.Conn, cmd redcon.Command) {
 		conn.WriteString("OK")
 		conn.Close()
 
-	// TODO: implement basic set, get and del
+	// TODO: implement set, get and del
 	case "get":
-		conn.WriteString("OK")
-		conn.Close()
+		var err error
+		var val []byte
+
+		if len(cmd.Args) < 2 {
+			conn.WriteError("ERR wrong number of arguments for '" + string(cmd.Args[0]) + "' command")
+			return
+		}
+
+		key := cmd.Args[1]
+
+		if val, err = localDatastorage.Get(key); err != nil {
+			log.Println("Error getting data from ", string(key), err.Error())
+			conn.WriteError("ERR: GET - " + err.Error())
+			return
+		}
+		conn.WriteString(string(val))
 
 	case "set":
+		var err error
+
+		if len(cmd.Args) < 3 {
+			conn.WriteError("ERR wrong number of arguments for '" + string(cmd.Args[0]) + "' command")
+			return
+		}
+
+		key := cmd.Args[1]
+		val := cmd.Args[2]
+
+		if err = localDatastorage.Add(key, val); err != nil {
+			log.Println("Error setting data: ", string(key), err.Error())
+			conn.WriteError("ERR: GET - " + err.Error())
+			return
+		}
 		conn.WriteString("OK")
-		conn.Close()
 
 	case "del":
-		conn.WriteString("OK")
-		conn.Close()
+		var err error
+		var count int64
+
+		if len(cmd.Args) < 2 {
+			conn.WriteError("ERR wrong number of arguments for '" + string(cmd.Args[0]) + "' command")
+			return
+		}
+		for _, key := range cmd.Args[1:] {
+			var ok bool
+			if ok, err = localDatastorage.Delete(key); err != nil {
+				log.Println("Error deleting data from ", string(key), err.Error())
+				conn.WriteError("ERR: GET - " + err.Error())
+				return
+			}
+			if ok {
+				count++
+			}
+		}
+
+		conn.WriteInt64(count)
 
 	case "pfadd":
 		if len(cmd.Args) < 3 {

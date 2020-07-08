@@ -26,6 +26,7 @@ func help() {
 
 var localCounters *counters.HLLCounters
 var localSets *sets.CkSet
+var localDatastorage db.Datastorage
 
 func main() {
 
@@ -38,7 +39,7 @@ func main() {
 	flag.Usage = help
 	flag.Parse()
 
-	localDatastorage, _ := db.NewBadgerDatastorage(dbPath)
+	localDatastorage, _ = db.NewBadgerDatastorage(dbPath)
 	localCounters, _ = counters.NewHLLCounters(localDatastorage)
 	localSets, _ = sets.NewCkSets(localDatastorage)
 

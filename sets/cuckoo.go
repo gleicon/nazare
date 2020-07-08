@@ -68,8 +68,15 @@ func (ckset *CkSet) SAdd(key, member []byte) error {
 			return errors.New("Error decoding filter set: " + string(key))
 		}
 	}
-	sts.InsertUnique(key)
-	ckset.datastorage.Add(key, sts.Encode())
+	ok := sts.InsertUnique(member)
+	if !ok {
+		return errors.New("Error inserting at cuckoo set, key: " + string(key))
+	}
+
+	err = ckset.datastorage.Add(key, sts.Encode())
+	if err != nil {
+		return errors.New("Error inserting at datastore, key: " + string(key))
+	}
 
 	return nil
 }
@@ -82,16 +89,15 @@ func (ckset *CkSet) SisMember(key, member []byte) (bool, error) {
 	if err != nil {
 		return false, errors.New("Error fetching set: " + string(key))
 	}
-	if key != nil {
+	if value != nil {
 		sts, err := cuckoo.Decode(value)
 		if err != nil {
 			return false, errors.New("Error decoding filter set: " + string(key))
 		}
-		if sts.Lookup(member) {
-			return true, nil
-		}
+
+		return sts.Lookup(member), nil
 	}
-	return false, nil
+	return false, errors.New("Empty set:" + string(key))
 }
 
 /*
@@ -111,12 +117,14 @@ func (ckset *CkSet) SRem(key, member []byte) (bool, error) {
 		if err != nil {
 			return false, errors.New("Error decoding filter set: " + string(key))
 		}
-		if sts.Delete(member) {
-			return true, nil
+		ok := sts.Delete(member)
+		if !ok {
+			return false, errors.New("Error deleting from set: " + string(key))
 		}
 		if err = ckset.datastorage.Add(key, sts.Encode()); err != nil {
 			return false, errors.New("Error encoding filter set: " + string(key))
 		}
+		return true, nil
 	}
 	return false, nil
 }
