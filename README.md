@@ -1,8 +1,12 @@
 ### nazare
-Nazaré is a server for sketch counters persisted on badger db with a redis interface.
+Nazaré is a server for sketch counters and sets persisted on badger db with a redis interface. It is a database that is not so sure about its data.
 
 ### Why
-Drop in replacement for Redis specifically on counters to achieve better performance using multicore and a specialised persistence mechanism with badger db.
+Many opensource services resort to sketch structures when the cardinality (size) of a counter reaches beyond a certain value. [Elasticsearch](https://www.elastic.co/blog/count-elasticsearch) uses hyperloglog for counters over 40k documents. Cassandra uses bloom filter to prevent disk hits as cache. Redis implements HyperLogLog too. 
+Sketch structures trade size or performance by accuracy. Different implementations are available that tune these parameters. 
+Nazare is a drop in replacement for Redis as it speaks the same protocol, enabling any application that implements a Redis Driver to use such counters and sets operations.
+The Underlying database is [BadgerDB](https://github.com/dgraph-io/badger), which implements a series of improvements over non Golang local kv values, including concurrent ACID transactions.
+
 
 ### Build and run
 
@@ -20,13 +24,17 @@ $ ./nazare
 
 ### Implemented commands
 
+	GET
+	SET
+	DEL
 	PFADD
 	PFCOUNT
+	SADD
+	SREM
+	SCARD
+	SISMEMBER
 
 ### TODO
-
-	implement PFMERGE
-	implement GET/SET w/ cuckoo filter
 	metrics and stats
 
 ### Nazaré
