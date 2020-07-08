@@ -4,15 +4,14 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
 	_ "net/http/pprof"
 	"os"
 
+	"github.com/gleicon/nazare/server"
 	"github.com/gleicon/nazare/sets"
 
 	"github.com/gleicon/nazare/counters"
 	"github.com/gleicon/nazare/db"
-	"github.com/tidwall/redcon"
 )
 
 func help() {
@@ -32,23 +31,19 @@ func main() {
 
 	var serverAddr, httpAPIAddr, dbPath string
 
-	serverAddr = *flag.String("s", "0.0.0.0:6379", "Redis server ip:port")
+	serverAddr = *flag.String("s", "127.0.0.1:6379", "Redis server ip:port")
 	httpAPIAddr = *flag.String("a", "127.0.0.1:8080", "Api and metrics ip:port")
 	dbPath = *flag.String("d", "hllcounters.db", "Database path")
 
 	flag.Usage = help
 	flag.Parse()
 
-	localDatastorage, _ = db.NewBadgerDatastorage(dbPath)
-	localCounters, _ = counters.NewHLLCounters(localDatastorage)
-	localSets, _ = sets.NewCkSets(localDatastorage)
-
-	log.Println(httpAPIAddr)
-
-	go func() {
-		err := redcon.ListenAndServe(serverAddr, redisCommandParser, newConnection, closeConnection)
-		log.Fatal(err)
-	}()
-	http.ListenAndServe(httpAPIAddr, nil)
-	select {}
+	nzs, err := server.NewNZServer(serverAddr, httpAPIAddr, dbPath)
+	if err != nil {
+		log.Panic("Error creating server:", err)
+	}
+	err = nzs.Start()
+	if err != nil {
+		log.Panic("Error starting server:", err)
+	}
 }
