@@ -142,7 +142,8 @@ func (bds *BadgerDatastorage) Get(key []byte) ([]byte, error) {
 /*
 Delete a given key
 */
-func (bds *BadgerDatastorage) Delete(key []byte) error {
+func (bds *BadgerDatastorage) Delete(key []byte) (bool, error) {
+	var found bool
 	err := bds.db.View(func(txn *badger.Txn) error {
 
 		err := txn.Delete(key)
@@ -152,10 +153,14 @@ func (bds *BadgerDatastorage) Delete(key []byte) error {
 		if err != nil && err != badger.ErrKeyNotFound {
 			return err
 		}
-
+		if err == badger.ErrKeyNotFound {
+			found = false
+			return nil
+		}
+		found = true
 		return nil
 	})
-	return err
+	return found, err
 }
 
 /*

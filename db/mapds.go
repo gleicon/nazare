@@ -39,9 +39,10 @@ func (hds *HLLDatastorage) Get(key []byte) ([]byte, error) {
 /*
 Delete a key
 */
-func (hds *HLLDatastorage) Delete(key []byte) error {
+func (hds *HLLDatastorage) Delete(key []byte) (bool, error) {
+	_, found := hds.bytemap[string(key)]
 	delete(hds.bytemap, string(key))
-	return nil
+	return found, nil
 }
 
 /*
