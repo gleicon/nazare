@@ -6,9 +6,11 @@ import (
 	"log"
 	"net/http"
 
+	httplogger "github.com/gleicon/go-httplogger"
 	"github.com/gleicon/nazare/counters"
 	"github.com/gleicon/nazare/db"
 	"github.com/gleicon/nazare/sets"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/tidwall/redcon"
 )
 
@@ -70,10 +72,26 @@ func (nzs *NZServer) Start() error {
 		select {}
 	}()
 
-	log.Println("HTTP API: " + nzs.httpAPIAddr)
-	if err := http.ListenAndServe(nzs.httpAPIAddr, nil); err != nil {
-		return errors.Unwrap(fmt.Errorf("Error spinning up HTTP API: %w", err))
+	log.Println("HTTP Metrics API: " + nzs.httpAPIAddr)
+
+	if err := nzs.httpMetrics(); err != nil {
+		return err
 	}
-	//err = <-errChannel
+	err = <-errChannel
 	return err
+}
+
+func (nzs *NZServer) httpMetrics() error {
+	serveMux := http.NewServeMux()
+
+	serveMux.Handle("/metrics", promhttp.Handler())
+
+	srv := http.Server{
+		Addr:    nzs.httpAPIAddr,
+		Handler: httplogger.HTTPLogger(serveMux),
+	}
+	if err := srv.ListenAndServe(); err != nil {
+		return errors.Unwrap(fmt.Errorf("Error spinning up HTTP Metrics API: %w", err))
+	}
+	return nil
 }

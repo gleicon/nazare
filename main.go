@@ -19,7 +19,7 @@ func help() {
 	fmt.Println("Talks redis protocol and limited commandset")
 	fmt.Println("-s ip:port - ip and port to bind for redis protocol, default 0.0.0.0:6379")
 	fmt.Println("-d dbpath - hllcounters.db")
-	fmt.Println("-a api ip:port for http api and metrics - default 127.0.0.1:8080")
+	fmt.Println("-m api ip:port for prometheus metrics - default 127.0.0.1:2112")
 	os.Exit(-1)
 }
 
@@ -32,7 +32,7 @@ func main() {
 	var serverAddr, httpAPIAddr, dbPath string
 
 	serverAddr = *flag.String("s", "127.0.0.1:6379", "Redis server ip:port")
-	httpAPIAddr = *flag.String("a", "127.0.0.1:8080", "Api and metrics ip:port")
+	httpAPIAddr = *flag.String("m", "127.0.0.1:2112", "Prometheus metrics ip:port")
 	dbPath = *flag.String("d", "hllcounters.db", "Database path")
 
 	flag.Usage = help
