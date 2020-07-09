@@ -6,9 +6,11 @@ import (
 	"log"
 	"net/http"
 
+	httplogger "github.com/gleicon/go-httplogger"
 	"github.com/gleicon/nazare/counters"
 	"github.com/gleicon/nazare/db"
 	"github.com/gleicon/nazare/sets"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/tidwall/redcon"
 )
 
@@ -23,6 +25,8 @@ type NZServer struct {
 	serverAddr  string
 	httpAPIAddr string
 	dbPath      string
+
+	customMetrics *NZServerCustomMetrics
 }
 
 /*
@@ -31,6 +35,11 @@ NewNZServer starts a new nazare server (redis and http endpoints)
 func NewNZServer(serverAddr, httpAPIAddr, dbPath string) (*NZServer, error) {
 	var err error
 	nzServer := NZServer{serverAddr: serverAddr, httpAPIAddr: httpAPIAddr, dbPath: dbPath}
+
+	log.Println("Creating metrics")
+	if nzServer.customMetrics, err = NewNZServerCustomMetrics(); err != nil {
+		return nil, errors.Unwrap(fmt.Errorf("Error creating metrics pool: %w", err))
+	}
 
 	log.Println("Creating local database")
 	if nzServer.localDatastorage, err = db.NewBadgerDatastorage(dbPath); err != nil {
@@ -56,6 +65,7 @@ Start the service
 */
 func (nzs *NZServer) Start() error {
 	var err error
+
 	// spin up the Redis connector
 	errChannel := make(chan error, 1)
 	go func() {
@@ -70,10 +80,26 @@ func (nzs *NZServer) Start() error {
 		select {}
 	}()
 
-	log.Println("HTTP API: " + nzs.httpAPIAddr)
-	if err := http.ListenAndServe(nzs.httpAPIAddr, nil); err != nil {
-		return errors.Unwrap(fmt.Errorf("Error spinning up HTTP API: %w", err))
+	log.Println("HTTP Metrics API: " + nzs.httpAPIAddr)
+
+	if err := nzs.httpMetrics(); err != nil {
+		return err
 	}
-	//err = <-errChannel
+	err = <-errChannel
 	return err
+}
+
+func (nzs *NZServer) httpMetrics() error {
+	serveMux := http.NewServeMux()
+
+	serveMux.Handle("/metrics", promhttp.Handler())
+
+	srv := http.Server{
+		Addr:    nzs.httpAPIAddr,
+		Handler: httplogger.HTTPLogger(serveMux),
+	}
+	if err := srv.ListenAndServe(); err != nil {
+		return errors.Unwrap(fmt.Errorf("Error spinning up HTTP Metrics API: %w", err))
+	}
+	return nil
 }
