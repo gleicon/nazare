@@ -13,7 +13,7 @@ func help() {
 	fmt.Println("nazare-cli serverless local HLLCounters and Sets")
 	fmt.Println("Use -b </path/to/databasename.db> to persist w/ badgedb (default name nazare.db in the current dir)")
 	fmt.Println("HyperLogLog based counters:")
-	fmt.Println("Add to a hll counter: nazare-cli -c -a <countername> <item>")
+	fmt.Println("Add to a hll counter: nazare-cli counters -a <countername> <item>")
 	fmt.Println("Estimate counter size: nazare-cli -c -e <countername>")
 	fmt.Println("Cuckoo filter based sets:")
 	fmt.Println("Add to a set: nazare-cli -s -a <setname> <item>")

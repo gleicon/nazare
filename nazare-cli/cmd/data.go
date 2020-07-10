@@ -22,36 +22,25 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
 // dataCmd represents the data command
 var dataCmd = &cobra.Command{
 	Use:   "data",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("data called")
-	},
+	Short: "K/V data storage on badgerdb",
+	Long: `Local key/value storage. No data type handling
+	
+	Operations available: Set, Get and Del(ete)
+	- Set a key: nazare-cli data -s <keyname> <value>
+	- Get the value of a key: nazare-cli data -g <keyname>
+	- Delete a key: nazare-cli data -d <keyname>
+	`,
 }
 
 func init() {
 	rootCmd.AddCommand(dataCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// dataCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// dataCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	dataCmd.Flags().StringP("set", "s", "", "<key> <value> - sets <key> to <value>")
+	dataCmd.Flags().StringP("get", "g", "", "<key> - gets value for <key>")
+	dataCmd.Flags().StringP("del", "d", "", "deletes <key>")
 }

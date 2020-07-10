@@ -22,36 +22,32 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
 // setsCmd represents the sets command
 var setsCmd = &cobra.Command{
 	Use:   "sets",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Cuckoo filter based sets",
+	Long: `Cuckoo filter is a probabilistic structure that can tell if an item belongs 
+	to a large set using way less memory than holding the entire set 
+	but with a trade-off on false positives (they are possible). 
+	False negatives (never seen that item) are not possible.
+	
+	Operations available: Add, Test if item is present, Remove item, Estimate cardinality
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("sets called")
-	},
+	- Add to a set: nazare-cli sets -a <setname> <item>
+	- Check if an item belongs to a set: nazare-cli sets -i <setname> <item>
+	- Remove an item from a set: nazare-cli sets -r <setname> <item>
+	- Estimate set cardinality: nazare-cli sets -e <setname>
+
+`,
 }
 
 func init() {
 	rootCmd.AddCommand(setsCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// setsCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// setsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	setsCmd.Flags().StringP("add", "a", "", "<setname> <item> - adds <item> to set <setname>")
+	setsCmd.Flags().StringP("ismember", "i", "", "<setname> <item> - check if <item> belongs to set <setname>")
+	setsCmd.Flags().StringP("remove", "r", "", "<setname> <item> - removes <item> from <setname>")
+	setsCmd.Flags().StringP("estimate", "e", "", "<setname> estimate set cardinality (size)")
 }

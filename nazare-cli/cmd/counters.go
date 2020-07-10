@@ -22,36 +22,26 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
 // countersCmd represents the counters command
 var countersCmd = &cobra.Command{
 	Use:   "counters",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "HyperLogLog based counters",
+	Long: `HyperLogLog is an algorithm to estimate cadinality for large quantities of data without consuming
+	 large memory for its elements. Essentially a counter with error deviation.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("counters called")
-	},
+	 Operations available: Add to the set, estimate cardinality (count)
+	- Add to a hll counter: nazare-cli counters -a <countername> <item>
+	- Estimate counter size: nazare-cli counters -e <countername>
+`,
 }
 
 func init() {
 	rootCmd.AddCommand(countersCmd)
 
-	// Here you will define your flags and configuration settings.
+	countersCmd.Flags().StringP("add", "a", "", "<countername> <item> - adds <item> to a counter <countername>")
+	countersCmd.Flags().StringP("estimate", "e", "", "<countername> estimate counter cardinality")
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// countersCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// countersCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
