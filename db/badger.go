@@ -144,7 +144,7 @@ Delete a given key
 */
 func (bds *BadgerDatastorage) Delete(key []byte) (bool, error) {
 	var found bool
-	err := bds.db.View(func(txn *badger.Txn) error {
+	err := bds.db.Update(func(txn *badger.Txn) error {
 
 		err := txn.Delete(key)
 		if err == badger.ErrKeyNotFound {
