@@ -14,7 +14,7 @@ func help() {
 	fmt.Println("Use -b </path/to/databasename.db> to persist w/ badgedb (default name nazare.db in the current dir)")
 	fmt.Println("HyperLogLog based counters:")
 	fmt.Println("Add to a hll counter: nazare-cli counters -a <countername> <item>")
-	fmt.Println("Estimate counter size: nazare-cli -c -e <countername>")
+	fmt.Println("Estimate counter size: nazare-cli counters -e <countername>")
 	fmt.Println("Cuckoo filter based sets:")
 	fmt.Println("Add to a set: nazare-cli -s -a <setname> <item>")
 	fmt.Println("Check if an item belongs to a set: nazare-cli -s -i <setname> <item>")
