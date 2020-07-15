@@ -20,7 +20,7 @@ server:
 	go build -v -o $(NAME) 
 
 cli:
-	make -C all nazare-cli
+	make -C nazare-cli all
 
 clean:
 	rm -f $(NAME)

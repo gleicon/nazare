@@ -1,4 +1,4 @@
-### nazare
+### Nazare
 Nazaré is a server for sketch counters and sets persisted on badger db with a redis interface. It is a database that is not so sure about its data.
 
 ### Why
