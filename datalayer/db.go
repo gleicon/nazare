@@ -1,4 +1,4 @@
-package cmd
+package datalayer
 
 import (
 	"errors"
@@ -10,36 +10,36 @@ import (
 	"github.com/gleicon/nazare/sets"
 )
 
-// LocalDb is the minimal set of resources for nazare
-type LocalDb struct {
+// LocalDB is the minimal set of resources for nazare. Works for both cli and server
+type LocalDB struct {
 	dbPath           string
-	localDatastorage db.Datastorage
-	localCounters    *counters.HLLCounters
-	localSets        *sets.CkSet
+	LocalDatastorage db.Datastorage
+	LocalCounters    *counters.HLLCounters
+	LocalSets        *sets.CkSet
 }
 
 // NewLocalDB preps the local db
-func NewLocalDB() *LocalDb {
-	ldb := LocalDb{}
+func NewLocalDB() *LocalDB {
+	ldb := LocalDB{}
 	return &ldb
 }
 
 // Start spins a local structure
-func (ldb *LocalDb) Start(dbPath string) error {
+func (ldb *LocalDB) Start(dbPath string) error {
 	var err error
 
-	if ldb.localDatastorage, err = db.NewBadgerDatastorage(dbPath); err != nil {
+	if ldb.LocalDatastorage, err = db.NewBadgerDatastorage(dbPath); err != nil {
 		return errors.Unwrap(fmt.Errorf("Error creating datastorage: %w", err))
 	}
 
 	log.Println("Creating counter structures")
-	if ldb.localCounters, err = counters.NewHLLCounters(ldb.localDatastorage); err != nil {
+	if ldb.LocalCounters, err = counters.NewHLLCounters(ldb.LocalDatastorage); err != nil {
 		return errors.Unwrap(fmt.Errorf("Error creating HLLCounters: %w", err))
 
 	}
 
 	log.Println("Creating sets structures")
-	if ldb.localSets, err = sets.NewCkSets(ldb.localDatastorage); err != nil {
+	if ldb.LocalSets, err = sets.NewCkSets(ldb.LocalDatastorage); err != nil {
 		return errors.Unwrap(fmt.Errorf("Error creating localDatastorage: %w", err))
 
 	}

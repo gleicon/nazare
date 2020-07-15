@@ -41,7 +41,7 @@ func countersHandler(cmd *cobra.Command, args []string) error {
 		if len(args) < 2 {
 			return errors.New("Invalid parameters, Add requires <countername> <item>")
 		}
-		if err = ldb.localCounters.IncrementCounter([]byte(args[0]), []byte(args[1])); err != nil {
+		if err = ldb.LocalCounters.IncrementCounter([]byte(args[0]), []byte(args[1])); err != nil {
 			return errors.Unwrap(fmt.Errorf("Error adding to counter: %w", err))
 		}
 	}
@@ -51,7 +51,7 @@ func countersHandler(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
 			return errors.New("Invalid parameters, Estimate requires <countername>")
 		}
-		if res, err = ldb.localCounters.RetrieveCounterEstimate([]byte(args[0])); err != nil {
+		if res, err = ldb.LocalCounters.RetrieveCounterEstimate([]byte(args[0])); err != nil {
 			return errors.Unwrap(fmt.Errorf("Error checking estimate from counter: %w", err))
 		}
 		fmt.Fprintf(os.Stdout, "%d\n", res)

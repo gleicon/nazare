@@ -7,7 +7,11 @@ Many opensource services resort to sketch structures when the cardinality (size)
 Sketch structures trade size or performance by accuracy. Different implementations are available that tune these parameters. 
 
 Nazare is a drop in replacement for Redis as it speaks the same protocol, enabling any application that implements a Redis Driver to use such counters and sets operations.
+
+### Database
 The Underlying database is [BadgerDB](https://github.com/dgraph-io/badger), which implements a series of improvements over non Golang local kv values, including concurrent ACID transactions.
+
+Having a local database is counterintuitive if you building a distributed system but Nazare is meant as a lightweight server and command line so you can `cp` or `rsync` your database around servers, download from S3 before start and delegate loading it to another process, effectively rendering nazare as a cache for sketch structures on ephemeral servers.
 
 
 ### Build and run
@@ -37,7 +41,7 @@ $ ./nazare
 	SISMEMBER
 
 ### TODO
-	metrics and stats
+	hot database reload
 
 ### Nazaré
 

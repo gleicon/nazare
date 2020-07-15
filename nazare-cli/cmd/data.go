@@ -46,7 +46,7 @@ func dataHandler(cmd *cobra.Command, args []string) error {
 		if len(args) < 2 {
 			return errors.New("Invalid parameters, Add requires <key> <value>")
 		}
-		if err = ldb.localDatastorage.Add([]byte(args[0]), []byte(args[1])); err != nil {
+		if err = ldb.LocalDatastorage.Add([]byte(args[0]), []byte(args[1])); err != nil {
 			return errors.Unwrap(fmt.Errorf("Error adding to db: %w", err))
 		}
 	}
@@ -55,7 +55,7 @@ func dataHandler(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
 			return errors.New("Invalid parameters, Get requires <key>")
 		}
-		if value, err = ldb.localDatastorage.Get([]byte(args[0])); err != nil {
+		if value, err = ldb.LocalDatastorage.Get([]byte(args[0])); err != nil {
 			return errors.Unwrap(fmt.Errorf("Error getting value from db: %w", err))
 		}
 		fmt.Fprintf(os.Stdout, "%s\n", string(value))
@@ -66,7 +66,7 @@ func dataHandler(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
 			return errors.New("Invalid parameters, delete requires <key>")
 		}
-		if removed, err = ldb.localDatastorage.Delete([]byte(args[0])); err != nil {
+		if removed, err = ldb.LocalDatastorage.Delete([]byte(args[0])); err != nil {
 			return errors.Unwrap(fmt.Errorf("Error deleting from db: %w", err))
 		}
 		fmt.Fprintf(os.Stdout, "%t\n", removed)

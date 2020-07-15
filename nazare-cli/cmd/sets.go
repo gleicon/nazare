@@ -53,7 +53,7 @@ func setsHandler(cmd *cobra.Command, args []string) error {
 		if len(args) < 2 {
 			return errors.New("Invalid parameters, Add requires <setname> <item>")
 		}
-		if err = ldb.localSets.SAdd([]byte(args[0]), []byte(args[1])); err != nil {
+		if err = ldb.LocalSets.SAdd([]byte(args[0]), []byte(args[1])); err != nil {
 			return errors.Unwrap(fmt.Errorf("Error adding to set: %w", err))
 		}
 	}
@@ -62,7 +62,7 @@ func setsHandler(cmd *cobra.Command, args []string) error {
 		if len(args) < 2 {
 			return errors.New("Invalid parameters, isMember requires <setname> <item>")
 		}
-		if isMember, err = ldb.localSets.SisMember([]byte(args[0]), []byte(args[1])); err != nil {
+		if isMember, err = ldb.LocalSets.SisMember([]byte(args[0]), []byte(args[1])); err != nil {
 			return errors.Unwrap(fmt.Errorf("Error checking isMember: %w", err))
 		}
 		fmt.Fprintf(os.Stdout, "%t\n", isMember)
@@ -73,7 +73,7 @@ func setsHandler(cmd *cobra.Command, args []string) error {
 		if len(args) < 2 {
 			return errors.New("Invalid parameters, remove requires <setname> <item>")
 		}
-		if removed, err = ldb.localSets.SRem([]byte(args[0]), []byte(args[1])); err != nil {
+		if removed, err = ldb.LocalSets.SRem([]byte(args[0]), []byte(args[1])); err != nil {
 			return errors.Unwrap(fmt.Errorf("Error removing from set: %w", err))
 		}
 		fmt.Fprintf(os.Stdout, "%t\n", removed)
@@ -85,7 +85,7 @@ func setsHandler(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
 			return errors.New("Invalid parameters, Estimate requires <countername>")
 		}
-		if res, err = ldb.localSets.SCard([]byte(args[0])); err != nil {
+		if res, err = ldb.LocalSets.SCard([]byte(args[0])); err != nil {
 			return errors.Unwrap(fmt.Errorf("Error checking estimate from set: %w", err))
 		}
 		fmt.Fprintf(os.Stdout, "%d\n", res)

@@ -41,7 +41,7 @@ func (nzs *NZServer) redisCommandParser(conn redcon.Conn, cmd redcon.Command) {
 
 		key := cmd.Args[1]
 
-		if val, err = nzs.localDatastorage.Get(key); err != nil {
+		if val, err = nzs.ldb.LocalDatastorage.Get(key); err != nil {
 			log.Println("Error getting data from ", string(key), err.Error())
 			conn.WriteError("ERR: GET - " + err.Error())
 			nzs.customMetrics.errorCmds.Inc()
@@ -66,7 +66,7 @@ func (nzs *NZServer) redisCommandParser(conn redcon.Conn, cmd redcon.Command) {
 		key := cmd.Args[1]
 		val := cmd.Args[2]
 
-		if err = nzs.localDatastorage.Add(key, val); err != nil {
+		if err = nzs.ldb.LocalDatastorage.Add(key, val); err != nil {
 			log.Println("Error setting data: ", string(key), err.Error())
 			conn.WriteError("ERR: GET - " + err.Error())
 			nzs.customMetrics.errorCmds.Inc()
@@ -85,7 +85,7 @@ func (nzs *NZServer) redisCommandParser(conn redcon.Conn, cmd redcon.Command) {
 		}
 		for _, key := range cmd.Args[1:] {
 			var ok bool
-			if ok, err = nzs.localDatastorage.Delete(key); err != nil {
+			if ok, err = nzs.ldb.LocalDatastorage.Delete(key); err != nil {
 				log.Println("Error deleting data from ", string(key), err.Error())
 				conn.WriteError("ERR: GET - " + err.Error())
 				nzs.customMetrics.errorCmds.Inc()
@@ -108,7 +108,7 @@ func (nzs *NZServer) redisCommandParser(conn redcon.Conn, cmd redcon.Command) {
 		counterName := cmd.Args[1]
 		values := cmd.Args[2:]
 		for _, v := range values {
-			if err := nzs.localCounters.IncrementCounter(counterName, v); err != nil {
+			if err := nzs.ldb.LocalCounters.IncrementCounter(counterName, v); err != nil {
 				log.Println("Error incrementing counter ", string(counterName), err.Error())
 				conn.WriteError("ERR: PFADD on " + err.Error())
 				nzs.customMetrics.errorCmds.Inc()
@@ -139,14 +139,14 @@ func (nzs *NZServer) redisCommandParser(conn redcon.Conn, cmd redcon.Command) {
 		}
 
 		if len(keys) > 1 {
-			if cc, err = nzs.localCounters.RetrieveAndMergeCounterEstimates(keys...); err != nil {
+			if cc, err = nzs.ldb.LocalCounters.RetrieveAndMergeCounterEstimates(keys...); err != nil {
 				log.Println("Error retrieving counters " + string(counterName) + ":" + err.Error())
 				conn.WriteError("ERR: pfcount retrieving and merging values: " + err.Error())
 				nzs.customMetrics.errorCmds.Inc()
 				return
 			}
 		} else {
-			if cc, err = nzs.localCounters.RetrieveCounterEstimate(keys[0]); err != nil {
+			if cc, err = nzs.ldb.LocalCounters.RetrieveCounterEstimate(keys[0]); err != nil {
 				log.Println("Error retrieving counters " + string(counterName) + ":" + err.Error())
 				conn.WriteError("ERR: pfcount retrieving values: " + err.Error())
 				nzs.customMetrics.errorCmds.Inc()
@@ -167,7 +167,7 @@ func (nzs *NZServer) redisCommandParser(conn redcon.Conn, cmd redcon.Command) {
 		setName := cmd.Args[1]
 		member := cmd.Args[2]
 
-		if err = nzs.localSets.SAdd(setName, member); err != nil {
+		if err = nzs.ldb.LocalSets.SAdd(setName, member); err != nil {
 			log.Printf("Error adding member %s to set %s: %s\n", string(member), string(setName), err.Error())
 			conn.WriteError("ERR: sadd " + err.Error())
 			nzs.customMetrics.errorCmds.Inc()
@@ -187,7 +187,7 @@ func (nzs *NZServer) redisCommandParser(conn redcon.Conn, cmd redcon.Command) {
 		setName := cmd.Args[1]
 		member := cmd.Args[2]
 
-		if ok, err = nzs.localSets.SisMember(setName, member); err != nil {
+		if ok, err = nzs.ldb.LocalSets.SisMember(setName, member); err != nil {
 			log.Printf("Error looking up membership of %s to set %s: %s\n", string(member), string(setName), err.Error())
 			conn.WriteError("ERR: ismember " + err.Error())
 			nzs.customMetrics.errorCmds.Inc()
@@ -211,7 +211,7 @@ func (nzs *NZServer) redisCommandParser(conn redcon.Conn, cmd redcon.Command) {
 		setName := cmd.Args[1]
 		member := cmd.Args[2]
 
-		if ok, err = nzs.localSets.SRem(setName, member); err != nil {
+		if ok, err = nzs.ldb.LocalSets.SRem(setName, member); err != nil {
 			log.Printf("Error removing %s from set %s: %s\n", string(member), string(setName), err.Error())
 			conn.WriteError("ERR: srem " + err.Error())
 			nzs.customMetrics.errorCmds.Inc()
@@ -235,7 +235,7 @@ func (nzs *NZServer) redisCommandParser(conn redcon.Conn, cmd redcon.Command) {
 		}
 		setName := cmd.Args[1]
 
-		if cardinality, err = nzs.localSets.SCard(setName); err != nil {
+		if cardinality, err = nzs.ldb.LocalSets.SCard(setName); err != nil {
 			log.Printf("Error fetching cardinality for %s: %s\n", string(setName), err.Error())
 			conn.WriteError("ERR: srem " + err.Error())
 			nzs.customMetrics.errorCmds.Inc()

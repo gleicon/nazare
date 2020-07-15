@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gleicon/nazare/datalayer"
 	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
@@ -11,7 +12,7 @@ import (
 )
 
 var cfgFile string
-var ldb *LocalDb
+var ldb *datalayer.LocalDB
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -46,7 +47,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.nazare-cli.yaml)")
 
 	dbPath := rootCmd.Flags().StringP("database", "b", "nazare.db", "full database path and name. defaults to nazare.db at local dir")
-	ldb = NewLocalDB()
+	ldb = datalayer.NewLocalDB()
 	ldb.Start(*dbPath)
 }
 
