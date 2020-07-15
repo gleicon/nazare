@@ -7,9 +7,7 @@ import (
 	"net/http"
 
 	httplogger "github.com/gleicon/go-httplogger"
-	"github.com/gleicon/nazare/counters"
-	"github.com/gleicon/nazare/db"
-	"github.com/gleicon/nazare/sets"
+	"github.com/gleicon/nazare/datalayer"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/tidwall/redcon"
 )
@@ -18,9 +16,7 @@ import (
 NZServer contains all the server needs to run
 */
 type NZServer struct {
-	localCounters    *counters.HLLCounters
-	localSets        *sets.CkSet
-	localDatastorage db.Datastorage
+	ldb *datalayer.LocalDB
 
 	serverAddr  string
 	httpAPIAddr string
@@ -34,29 +30,20 @@ NewNZServer starts a new nazare server (redis and http endpoints)
 */
 func NewNZServer(serverAddr, httpAPIAddr, dbPath string) (*NZServer, error) {
 	var err error
+	if dbPath == "" {
+		return nil, errors.New("No database path given")
+	}
 	nzServer := NZServer{serverAddr: serverAddr, httpAPIAddr: httpAPIAddr, dbPath: dbPath}
+	nzServer.ldb = datalayer.NewLocalDB()
+
+	log.Println("Creating local database")
+	nzServer.ldb.Start(dbPath)
 
 	log.Println("Creating metrics")
 	if nzServer.customMetrics, err = NewNZServerCustomMetrics(); err != nil {
 		return nil, errors.Unwrap(fmt.Errorf("Error creating metrics pool: %w", err))
 	}
 
-	log.Println("Creating local database")
-	if nzServer.localDatastorage, err = db.NewBadgerDatastorage(dbPath); err != nil {
-		return nil, errors.Unwrap(fmt.Errorf("Error creating datastorage: %w", err))
-	}
-
-	log.Println("Creating counter structures")
-	if nzServer.localCounters, err = counters.NewHLLCounters(nzServer.localDatastorage); err != nil {
-		return nil, errors.Unwrap(fmt.Errorf("Error creating HLLCounters: %w", err))
-
-	}
-
-	log.Println("Creating sets structures")
-	if nzServer.localSets, err = sets.NewCkSets(nzServer.localDatastorage); err != nil {
-		return nil, errors.Unwrap(fmt.Errorf("Error creating localDatastorage: %w", err))
-
-	}
 	return &nzServer, nil
 }
 
