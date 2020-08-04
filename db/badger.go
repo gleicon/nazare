@@ -35,9 +35,11 @@ func NewBadgerDatastorage(dbpath string) (*BadgerDatastorage, error) {
 		return nil, err
 	}
 	go func() {
-		log.Println("Database housekeeping")
-		bds.cleanup()
-		time.Sleep(5 * time.Minute)
+		for {
+			log.Println("Database housekeeping")
+			bds.cleanup()
+			time.Sleep(5 * time.Minute)
+		}
 	}()
 	return &bds, nil
 }
