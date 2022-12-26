@@ -51,7 +51,6 @@ func (bds *BadgerDatastorage) cleanup() {
 	var ll sync.Mutex
 	ll.Lock()
 	defer ll.Unlock()
-	// TODO: these cleanup methods should be in a goroutine
 	bds.db.RunValueLogGC(1.0)
 }
 
